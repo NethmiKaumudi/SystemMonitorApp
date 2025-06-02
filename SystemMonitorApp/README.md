@@ -23,7 +23,8 @@ A simple Windows desktop application built with C# and WPF (.NET 8) that:
 
 ## Framework
 
-- Built using WPF with .NET 8.
+- Built using Windows Forms with .NET 8.
+
 
 ## Assumptions and Decisions
 
