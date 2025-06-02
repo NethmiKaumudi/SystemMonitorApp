@@ -27,10 +27,14 @@ A simple Windows desktop application built with C# and WPF (.NET 8) that:
 
 ## Assumptions and Decisions
 
-- Used `System.ServiceProcess.ServiceController` for service management.
-- Used `quser` command output parsing for retrieving Remote Desktop sessions.
-- Focused on simplicity and clear UI design with basic data-binding.
-- Requires administrative privileges to start/stop services.
+- Used `.NET 8` with Windows Forms for the UI framework.
+- Utilized `System.ServiceProcess.ServiceController` to manage and control Windows services.
+- For retrieving Remote Desktop sessions, used the `Wtsapi32.dll` with `WTSEnumerateSessions` and `WTSQuerySessionInformation`.
+- Basic data-binding and DataGridView were used for user-friendly display.
+- Assumes the app is run with administrative privileges to control service status.
+- Skips system and empty sessions (e.g., Session ID 0 and those without usernames).
+- Focused on simplicity, readability, and clean UI design.
+
 
 ## Build and Run Instructions
 
@@ -41,7 +45,7 @@ A simple Windows desktop application built with C# and WPF (.NET 8) that:
 
 3. Build the solution (ensure you have .NET 8 SDK installed).
 
-4 .Run the application.
+4. Run the application.
 
 5. For service start/stop functionality, run Visual Studio as Administrator.
 
