@@ -9,7 +9,12 @@ namespace SystemMonitorApp
     internal class RemoteUser
     {
         public string Username { get; set; }
-        public int SessionId { get; set; }
+
+        public string Password { get; set; }
+
+        public int? SessionId { get; set; }
         public string SessionState { get; set; }
+        public string RemoteAccess { get; set; }
+
     }
 }

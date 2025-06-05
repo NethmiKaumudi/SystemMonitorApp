@@ -13,12 +13,15 @@ namespace SystemMonitorApp
 {
     public partial class ServicesForm : Form
     {
+        private Label lblActiveCount;
+        private Label lblInactiveCount;
         public ServicesForm()
         {
             InitializeComponent();
             LoadServices();
             dgvServices.SelectionChanged += DgvServices_SelectionChanged;
         }
+       
         private void LoadServices()
         {
             var services = ServiceController.GetServices()
@@ -30,6 +33,7 @@ namespace SystemMonitorApp
                 })
                 .ToList();
             dgvServices.DataSource = services;
+            
         }
 
         private void DgvServices_SelectionChanged(object sender, EventArgs e)

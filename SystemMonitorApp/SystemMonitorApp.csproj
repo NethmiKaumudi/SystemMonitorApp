@@ -6,10 +6,17 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.DirectoryServices.AccountManagement">
+      <HintPath>C:\Windows\Microsoft.NET\Framework\v4.0.30319\System.DirectoryServices.AccountManagement.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
