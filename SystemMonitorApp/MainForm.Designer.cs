@@ -201,7 +201,7 @@
             // 
             lblRDP.AutoSize = true;
             lblRDP.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold);
-            lblRDP.Location = new Point(20, 65);
+            lblRDP.Location = new Point(19, 64);
             lblRDP.Name = "lblRDP";
             lblRDP.Size = new Size(59, 23);
             lblRDP.TabIndex = 5;

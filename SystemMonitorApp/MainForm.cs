@@ -4,9 +4,11 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.SqlTypes;
 using System.Diagnostics;
+using System.DirectoryServices.AccountManagement;
 using System.Drawing;
 using System.Linq;
 using System.Net.NetworkInformation;
+using System.Runtime.InteropServices;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,6 +19,52 @@ namespace SystemMonitorApp
 {
     public partial class MainForm : Form
     {
+        // WTSAPI32 imports
+        [DllImport("Wtsapi32.dll")]
+        private static extern bool WTSEnumerateSessions(
+            IntPtr hServer,
+            int Reserved,
+            int Version,
+            ref IntPtr ppSessionInfo,
+            ref int pCount);
+
+        [DllImport("Wtsapi32.dll")]
+        private static extern void WTSFreeMemory(IntPtr pMemory);
+
+        [DllImport("Wtsapi32.dll")]
+        private static extern bool WTSQuerySessionInformation(
+            IntPtr hServer,
+            int sessionId,
+            WTS_INFO_CLASS WTSInfoClass,
+            out IntPtr ppBuffer,
+            out int pBytesReturned);
+
+        private enum WTS_INFO_CLASS
+        {
+            WTSUserName = 5
+        }
+
+        private enum WTS_CONNECTSTATE_CLASS
+        {
+            WTSActive,
+            WTSConnected,
+            WTSConnectQuery,
+            WTSDisconnected,
+            WTSIdle,
+            WTSListen,
+            WTSReset,
+            WTSDown,
+            WTSInit
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct WTS_SESSION_INFO
+        {
+            public int SessionId;
+            public string pWinStationName;
+            public WTS_CONNECTSTATE_CLASS State;
+        }
+
         public MainForm()
         {
             InitializeComponent();
@@ -131,10 +179,77 @@ namespace SystemMonitorApp
 
         private (int loggedIn, int loggedOut) GetUserStats()
         {
-            // Placeholder, implemented in UsersForm
-            return (0, 0);
-        }
+            try
+            {
+                // Get active sessions
+                List<string> loggedInUsers = new List<string>();
+                IntPtr server = IntPtr.Zero;
+                IntPtr sessionInfo = IntPtr.Zero;
+                int sessionCount = 0;
 
+                bool success = WTSEnumerateSessions(IntPtr.Zero, 0, 1, ref sessionInfo, ref sessionCount);
+                if (!success)
+                {
+                    return (0, 0);
+                }
+
+                int dataSize = Marshal.SizeOf(typeof(WTS_SESSION_INFO));
+                IntPtr currentSession = sessionInfo;
+
+                for (int i = 0; i < sessionCount; i++)
+                {
+                    WTS_SESSION_INFO si = (WTS_SESSION_INFO)Marshal.PtrToStructure(currentSession, typeof(WTS_SESSION_INFO));
+                    currentSession = (IntPtr)(currentSession.ToInt64() + dataSize);
+
+                    IntPtr buffer;
+                    int bytesReturned;
+                    string userName = string.Empty;
+                    if (WTSQuerySessionInformation(IntPtr.Zero, si.SessionId, WTS_INFO_CLASS.WTSUserName, out buffer, out bytesReturned))
+                    {
+                        userName = Marshal.PtrToStringUni(buffer);
+                        WTSFreeMemory(buffer);
+                    }
+
+                    if (!string.IsNullOrEmpty(userName) && (si.State == WTS_CONNECTSTATE_CLASS.WTSActive || si.State == WTS_CONNECTSTATE_CLASS.WTSConnected))
+                    {
+                        if (!loggedInUsers.Contains(userName.ToLower()))
+                        {
+                            loggedInUsers.Add(userName.ToLower());
+                        }
+                    }
+                }
+
+                if (sessionInfo != IntPtr.Zero)
+                    WTSFreeMemory(sessionInfo);
+
+                // Get all local users
+                List<string> allUsers = new List<string>();
+                using (PrincipalContext context = new PrincipalContext(ContextType.Machine))
+                {
+                    GroupPrincipal group = GroupPrincipal.FindByIdentity(context, "Users");
+                    if (group != null)
+                    {
+                        foreach (Principal p in group.GetMembers())
+                        {
+                            if (p.StructuralObjectClass == "user")
+                            {
+                                allUsers.Add(p.SamAccountName.ToLower());
+                            }
+                        }
+                    }
+                }
+
+                // Calculate logged out users
+                int loggedIn = loggedInUsers.Count;
+                int loggedOut = allUsers.Except(loggedInUsers).Count();
+
+                return (loggedIn, loggedOut);
+            }
+            catch
+            {
+                return (0, 0);
+            }
+        }
         private void label4_Click(object sender, EventArgs e)
         {
 
